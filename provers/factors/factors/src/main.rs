@@ -13,73 +13,62 @@
 // limitations under the License.
 
 use methods::{MULTIPLY_ELF, MULTIPLY_ID};
-use risc0_zkvm::serde::{from_slice, to_vec};
-use risc0_zkvm::Prover;
-
-use subxt::{
-	ext::{
-		sp_core::{sr25519::Pair as SubxtPair, Pair},
-	},
-	tx::PairSigner,
-	OnlineClient, PolkadotConfig,
+use risc0_zkvm::{
+    serde::{from_slice, to_vec},
+    Executor, ExecutorEnv, SessionReceipt,
 };
 
-// // Runtime types, etc
-#[subxt::subxt(runtime_metadata_path = "./metadata.scale")]
-pub mod myexamplenode {}
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
     // Pick two numbers
-    let a: u64 = 17;
-    let b: u64 = 23;
+    let (receipt, _) = factors(17, 23);
 
-    println!("Creating Proof");
+    // Here is where one would send 'receipt' over the network...
 
-    // Multiply them inside the ZKP
-    // First, we make the prover, loading the 'multiply' method
-    let mut prover = Prover::new(MULTIPLY_ELF).expect(
-        "Prover should be constructed from valid method source code and corresponding method ID",
+    // Verify receipt, panic if it's wrong
+    receipt.verify(MULTIPLY_ID).expect(
+        "Code you have proven should successfully verify; did you specify the correct image ID?",
     );
-    println!("Ading input to proof");
+}
 
-    // Next we send a & b to the guest
-    prover.add_input_u32_slice(&to_vec(&a).expect("should be serializable"));
-    println!("Ading input to proof");
-    prover.add_input_u32_slice(&to_vec(&b).expect("should be serializable"));
-    println!("Running prover...");
-    // Run prover & generate receipt
-    let receipt = prover.run()
-        .expect("Valid code should be provable if it doesn't overflow the cycle limit. See `embed_methods_with_options` for information on adjusting maximum cycle count.");
-    println!("Got proof");
+// Multiply them inside the ZKP
+fn factors(a: u64, b: u64) -> (SessionReceipt, u64) {
+    let env = ExecutorEnv::builder()
+        // Send a & b to the guest
+        .add_input(&to_vec(&a).unwrap())
+        .add_input(&to_vec(&b).unwrap())
+        .build();
+
+    // First, we make an executor, loading the 'multiply' ELF binary.
+    let mut exec = Executor::from_elf(env, MULTIPLY_ELF).unwrap();
+
+    // Run the executor to produce a session.
+    let session = exec.run().unwrap();
+
+    // Prove the session to produce a receipt.
+    let receipt = session.prove().unwrap();
 
     // Extract journal of receipt (i.e. output c, where c = a * b)
     let c: u64 = from_slice(&receipt.journal).expect(
         "Journal output should deserialize into the same types (& order) that it was written",
     );
 
-    // // Verify receipt, panic if it's wrong
-    receipt.verify(&MULTIPLY_ID).expect(
-        "Code you have proven should successfully verify; did you specify the correct method ID?",
-    );
+    // Print an assertion
+    println!("I know the factors of {}, and I can prove it!", c);
 
-    let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
+    (receipt, c)
+}
 
-    let restored_key = SubxtPair::from_string("0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a", None).unwrap();
-    let signer = PairSigner::new(restored_key);
-
-    api
-        .tx()
-        .sign_and_submit_then_watch_default(
-            &myexamplenode::tx().template_module().send_factors_receipt(
-                // receipt.journal,
-                receipt.seal,
-                // MULTIPLY_ID
-            ),
-            &signer
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn factors() {
+        const TEST_FACTOR_ONE: u64 = 17;
+        const TEST_FACTOR_TWO: u64 = 23;
+        let (_, result) = super::factors(17, 23);
+        assert_eq!(
+            result,
+            TEST_FACTOR_ONE * TEST_FACTOR_TWO,
+            "We expect the zkVM output to be the product of the inputs"
         )
-        .await?
-        .wait_for_finalized()
-        .await?;
-    Ok(())
+    }
 }
