@@ -13,13 +13,59 @@
 // limitations under the License.
 
 use methods::{MULTIPLY_ELF, MULTIPLY_ID};
+
 use risc0_zkvm::{
     serde::{from_slice, to_vec},
     Executor, ExecutorEnv, SessionReceipt,
 };
 
-fn main() {
-    // Pick two numbers
+use subxt::{
+	config::WithExtrinsicParams,
+	ext::{
+		sp_core::{sr25519::Pair as SubxtPair, Pair as SubxtPairT},
+		sp_runtime::{AccountId32, MultiAddress},
+	},
+	SubstrateConfig,
+	tx::{BaseExtrinsicParams, PairSigner, PlainTip},
+	OnlineClient, PolkadotConfig,
+};
+
+// // Runtime types, etc
+#[subxt::subxt(runtime_metadata_path = "./metadata.scale")]
+pub mod substrate_node {}
+
+use crate::substrate_node::runtime_types::{
+    frame_system::AccountInfo,
+    pallet_balances::AccountData
+};
+
+type ApiType = OnlineClient<WithExtrinsicParams<SubstrateConfig, BaseExtrinsicParams<SubstrateConfig, PlainTip>>>;
+
+fn alice() -> subxt::ext::sp_core::sr25519::Pair  {
+    SubxtPair::from_string("0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a", None).unwrap()
+}
+
+fn bob() -> subxt::ext::sp_core::sr25519::Pair  {
+    SubxtPair::from_string("0x398f0c28f98885e046333d4a41c19cee4c37368a9832c6502f6cfd182e2aef89", None).unwrap()
+}
+
+async fn account_query(api: &ApiType, account: AccountId32)  -> Result<Option<AccountInfo<u32, AccountData<u128>>>, subxt::Error> {
+    let query = substrate_node::storage().system().account(&account);
+    let query_result = api.storage().fetch(&query, None).await;
+	query_result
+}
+
+#[tokio::main]
+async fn main() {
+    let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
+
+    let alice_result = account_query(&api, alice().public().into()).await;
+    let bob_result = account_query(&api, bob().public().into()).await;
+
+    let alice_free_balance = alice_result.unwrap().unwrap().data.free;
+    let bob_free_balance = bob_result.unwrap().unwrap().data.free;
+
+    // Pick two numbers TODO: pass alice and bob free balance into the guest
     let (receipt, _) = factors(17, 23);
 
     // Here is where one would send 'receipt' over the network...
@@ -28,6 +74,26 @@ fn main() {
     receipt.verify(MULTIPLY_ID).expect(
         "Code you have proven should successfully verify; did you specify the correct image ID?",
     );
+
+    // TODO: Below needs update to use changes to receipts in 0.14.0
+    // let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
+    // let restored_key = SubxtPair::from_string("0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a", None).unwrap();
+    // let signer = PairSigner::new(restored_key);
+
+    // api
+    //     .tx()
+    //     .sign_and_submit_then_watch_default(
+    //         &myexamplenode::tx().template_module().send_factors_receipt(
+    //             // receipt.journal,
+    //             receipt.seal,
+    //             // MULTIPLY_ID
+    //         ),
+    //         &signer
+    //     )
+    //     .await.unwrap()
+    //     .wait_for_finalized()
+    //     .await.unwrap();
+
 }
 
 // Multiply them inside the ZKP
