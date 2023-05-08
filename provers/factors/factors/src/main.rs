@@ -59,6 +59,7 @@ async fn account_query(api: &ApiType, account: AccountId32)  -> Result<Option<Ac
 async fn main() {
     let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
 
+    // Retrieve alice and bob balances as they will serve as our sender and recipient, respectively
     let alice_result = account_query(&api, alice().public().into()).await;
     let bob_result = account_query(&api, bob().public().into()).await;
 
@@ -66,7 +67,7 @@ async fn main() {
     let bob_free_balance = bob_result.unwrap().unwrap().data.free;
 
     // Pick two numbers TODO: pass alice and bob free balance into the guest
-    let (receipt, _) = factors(17, 23);
+    let (receipt, _) = factors(alice_free_balance, bob_free_balance);
 
     // Here is where one would send 'receipt' over the network...
 
@@ -97,7 +98,7 @@ async fn main() {
 }
 
 // Multiply them inside the ZKP
-fn factors(a: u64, b: u64) -> (SessionReceipt, u64) {
+fn factors(a: u128, b: u128) -> (SessionReceipt, u64) {
     let env = ExecutorEnv::builder()
         // Send a & b to the guest
         .add_input(&to_vec(&a).unwrap())
