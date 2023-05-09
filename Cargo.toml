@@ -2,8 +2,7 @@
 members = [
     "node",
     "pallets/template",
-    "runtime",
-    # "provers/*"
+    "runtime"
 ]
 
 exclude = [

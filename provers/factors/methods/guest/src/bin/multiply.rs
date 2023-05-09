@@ -20,16 +20,21 @@ use risc0_zkvm::guest::env;
 risc0_zkvm::guest::entry!(main);
 
 pub fn main() {
-    // Load the first number from the host
-    let a: u128 = env::read();
-    // Load the second number from the host
-    let b: u128 = env::read();
-   
-    let result = a.checked_sub(b);
+    // TODO: Need to figure out how to get this working... can't currently send u128s
+    let sender = env::read::<u128>();
+    let sender = env::read::<u128>();
+    let recipient = env::read::<u128>();
+    let transfer_amount = env::read::<u128>();
 
-    if result.is_none() {
+    let sender_new_balance = sender.checked_sub(transfer_amount);
+    if sender_new_balance.is_none() {
         panic!("Insufficient balance to transfer")
     }
+    let recipient_new_balance = recipient.checked_add(transfer_amount);
+    if recipient_new_balance.is_none() {
+        panic!("Recipient overflow")
+    }
 
-    env::commit(&result);
+    env::commit(&sender_new_balance.unwrap().to_le_bytes());
+    env::commit(&recipient_new_balance.unwrap().to_le_bytes());
 }

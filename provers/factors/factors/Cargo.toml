@@ -1,5 +1,5 @@
 [package]
-name = "starter"
+name = "rollup-host"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,5 +11,3 @@ tokio = { version = "1", features = ["full"] }
 subxt = { version = "0.25.0" }
 codec = { package = "parity-scale-codec", version = "3.2.2", default-features = false, features = ["derive"] }
 sp-core = { version = "7.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
-sp-std = { version = "5.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
-array-bytes = "6.0.0"

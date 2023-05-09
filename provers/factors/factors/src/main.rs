@@ -39,6 +39,7 @@ use crate::substrate_node::runtime_types::{
     pallet_balances::AccountData
 };
 
+
 type ApiType = OnlineClient<WithExtrinsicParams<SubstrateConfig, BaseExtrinsicParams<SubstrateConfig, PlainTip>>>;
 
 fn alice() -> subxt::ext::sp_core::sr25519::Pair  {
@@ -66,8 +67,13 @@ async fn main() {
     let alice_free_balance = alice_result.unwrap().unwrap().data.free;
     let bob_free_balance = bob_result.unwrap().unwrap().data.free;
 
-    // Pick two numbers TODO: pass alice and bob free balance into the guest
-    let (receipt, _) = factors(alice_free_balance, bob_free_balance);
+    let transfer_amount = 500_u128;
+
+    let (receipt, _) = transfer(
+        alice_free_balance,
+        bob_free_balance,
+        transfer_amount
+    );
 
     // Here is where one would send 'receipt' over the network...
 
@@ -97,12 +103,14 @@ async fn main() {
 
 }
 
-// Multiply them inside the ZKP
-fn factors(a: u128, b: u128) -> (SessionReceipt, u64) {
+// Compute the transfer inside the zkvm
+fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> (SessionReceipt, u128) {
+    println!("starting");
     let env = ExecutorEnv::builder()
-        // Send a & b to the guest
+        // TODO: Figure out how to end u128s to guest here
         .add_input(&to_vec(&a).unwrap())
         .add_input(&to_vec(&b).unwrap())
+        .add_input(&to_vec(&500).unwrap())
         .build();
 
     // First, we make an executor, loading the 'multiply' ELF binary.
@@ -114,8 +122,7 @@ fn factors(a: u128, b: u128) -> (SessionReceipt, u64) {
     // Prove the session to produce a receipt.
     let receipt = session.prove().unwrap();
 
-    // Extract journal of receipt (i.e. output c, where c = a * b)
-    let c: u64 = from_slice(&receipt.journal).expect(
+    let c: u128 = from_slice(&receipt.journal).expect(
         "Journal output should deserialize into the same types (& order) that it was written",
     );
 
@@ -123,19 +130,4 @@ fn factors(a: u128, b: u128) -> (SessionReceipt, u64) {
     println!("I know the factors of {}, and I can prove it!", c);
 
     (receipt, c)
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn factors() {
-        const TEST_FACTOR_ONE: u64 = 17;
-        const TEST_FACTOR_TWO: u64 = 23;
-        let (_, result) = super::factors(17, 23);
-        assert_eq!(
-            result,
-            TEST_FACTOR_ONE * TEST_FACTOR_TWO,
-            "We expect the zkVM output to be the product of the inputs"
-        )
-    }
 }
