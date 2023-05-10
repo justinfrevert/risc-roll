@@ -108,8 +108,8 @@ fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> (SessionRec
     println!("starting");
     let env = ExecutorEnv::builder()
         // TODO: Figure out how to end u128s to guest here
-        .add_input(&to_vec(&a).unwrap())
-        .add_input(&to_vec(&b).unwrap())
+        .add_input(&to_vec(&sender).unwrap())
+        .add_input(&to_vec(&recipient).unwrap())
         .add_input(&to_vec(&500).unwrap())
         .build();
 
