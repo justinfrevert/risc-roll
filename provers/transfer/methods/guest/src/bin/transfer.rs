@@ -27,14 +27,14 @@ pub fn main() {
     let recipient = u128::from_be_bytes(recipient_bytes);
     let transfer_amount = u128::from_be_bytes(transfer_amount_bytes);
 
-    let sender_new_balance = sender.checked_sub(transfer_amount);
-    if sender_new_balance.is_none() {
-        panic!("Insufficient balance to transfer")
-    }
-    let recipient_new_balance = recipient.checked_add(transfer_amount);
-    if recipient_new_balance.is_none() {
-        panic!("Recipient overflow")
-    }
+    // let sender_new_balance = sender.checked_sub(transfer_amount);
+    // if sender_new_balance.is_none() {
+    //     panic!("Insufficient balance to transfer")
+    // }
+    // let recipient_new_balance = recipient.checked_add(transfer_amount);
+    // if recipient_new_balance.is_none() {
+    //     panic!("Recipient overflow")
+    // }
 
     env::commit(&(
         sender_bytes,

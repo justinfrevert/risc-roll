@@ -105,10 +105,7 @@ async fn main() {
 }
 
 // Compute the transfer inside the zkvm
-fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> (
-    SessionReceipt,
-    [u8; 16]
-) {
+fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> (SessionReceipt, [u8; 16]) {
     println!("starting");
     let env = ExecutorEnv::builder()
         // TODO: Figure out how to end u128s to guest here
@@ -133,7 +130,7 @@ fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> (
     );
 
     // Print an assertion
-    // println!("Transfer result {:?}!", u128::from_be_bytes(c).0);
+    println!("I know the factors of {:?}, and I can prove it!", u128::from_be_bytes(c));
 
     (receipt, c)
 }
