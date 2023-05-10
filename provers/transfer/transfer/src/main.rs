@@ -70,7 +70,7 @@ async fn main() {
     let transfer_amount = 500_u128;
 
     println!("sender balance: {:?} recipient balance {:?}", alice_free_balance, bob_free_balance);
-    let (receipt, _) = transfer(
+    let receipt = transfer(
         alice_free_balance,
         bob_free_balance,
         transfer_amount
@@ -98,6 +98,8 @@ async fn main() {
         .tx()
         .sign_and_submit_then_watch_default(
             &substrate_node::tx().template_module().rollup_transfer(
+                alice().public().into(),
+                bob().public().into(),
                 substrate_session_receipt,
                 receipt.journal
             ),
@@ -110,10 +112,7 @@ async fn main() {
 }
 
 // Compute the transfer inside the zkvm
-fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> (
-    SessionReceipt,
-    ([u8; 16], [u8; 16], [u8; 16], [u8; 16])
-) {
+fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> SessionReceipt {
     let env = ExecutorEnv::builder()
         // TODO: Figure out how to end u128s to guest here
         .add_input(&to_vec(&sender.to_be_bytes()).unwrap())
@@ -129,16 +128,5 @@ fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> (
 
     // Prove the session to produce a receipt.
     let receipt = session.prove().unwrap();
-
-    let c: ([u8; 16], [u8; 16], [u8; 16], [u8; 16]) = from_slice(&receipt.journal).expect(
-        "Journal output should deserialize into the same types (& order) that it was written",
-    );
-
-    let sender_result = u128::from_be_bytes(c.1);
-    let recipient_result = u128::from_be_bytes(c.3);
-
-    // Print an assertion
-    println!("Transfer result sender {:?}, recipient: {:?}", sender_result, recipient_result);
-
-    (receipt, c)
+    receipt
 }

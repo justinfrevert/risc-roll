@@ -20,9 +20,10 @@ mod common;
 pub mod pallet {
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
-
+	use frame_support::traits::Currency;
 	use risc0_zkvm::{
-		SessionReceipt, SegmentReceipt, sha::Digest
+		SessionReceipt, SegmentReceipt, sha::Digest,
+		serde::from_slice
 	};
 	use crate::common::{TRANSFER_IMAGE_ID};
 	use sp_std::vec::Vec;
@@ -31,11 +32,15 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
+	pub type BalanceOf<T> =
+	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+		type Currency: Currency<<Self as frame_system::Config>::AccountId>;
 	}
 	// Pallets use events to inform users when important changes are made.
 	// https://docs.substrate.io/main-docs/build/events-errors/
@@ -53,15 +58,18 @@ pub mod pallet {
 	}
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> {
+	impl<T: Config> Pallet<T> where BalanceOf<T>: From<u128>{
 		#[pallet::weight(1000000)]
 		#[pallet::call_index(0)]
-		// Risc0 factors example
 		pub fn rollup_transfer(
 			origin: OriginFor<T>,
+			sender: T::AccountId,
+			recipient: T::AccountId,
 			substrate_segment_receipts: Vec<(Vec<u32>, u32)>,
 			journal: Vec<u8>
 		) -> DispatchResult {
+			// TODO: Look into whether there is a configuration where we don't need this extra signature check due to the other verifications
+			// i.e. add the receipt verification in the pallet validate unsigned portion
 			ensure_signed(origin)?;
 			let segments: Vec<SegmentReceipt> = substrate_segment_receipts.into_iter().map(|(seal, index)| {
 				SegmentReceipt { seal, index }
@@ -73,6 +81,19 @@ pub mod pallet {
 			};
 
 			receipt.verify(Digest::new(TRANSFER_IMAGE_ID)).map_err(|_| Error::<T>::FailedVerification)?;
+
+			// sender original, sender final, recipient original, recipient final
+			let (sender_original_bytes, sender_result_bytes, recipient_original_bytes, recipient_result_bytes): ([u8; 16], [u8; 16], [u8; 16], [u8; 16]) = from_slice(&receipt.journal).expect(
+				"Journal output should deserialize into the same types (& order) that it was written",
+			);
+
+			// TOD: Add sender and recipient accounts to journal
+			let sender_result = u128::from_be_bytes(sender_result_bytes);
+			let recipient_result = u128::from_be_bytes(recipient_result_bytes);
+			
+			// TODO: Check if there is a broader way to set new state 
+			T::Currency::make_free_balance_be(&sender, sender_result.into());
+			T::Currency::make_free_balance_be(&recipient, recipient_result.into());
 
 			Self::deposit_event(Event::<T>::VerificationSuccess);
 			Ok(())
