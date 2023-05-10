@@ -21,20 +21,20 @@ risc0_zkvm::guest::entry!(main);
 
 pub fn main() {
     // TODO: Need to figure out how to get this working... can't currently send u128s
-    let sender = env::read::<u128>();
-    let sender = env::read::<u128>();
-    let recipient = env::read::<u128>();
-    let transfer_amount = env::read::<u128>();
+    let sender = env::read::<[u8; 16]>();
+    let recipient = env::read::<[u8; 16]>();
+    let transfer_amount = env::read::<[u8; 16]>();
 
-    let sender_new_balance = sender.checked_sub(transfer_amount);
-    if sender_new_balance.is_none() {
-        panic!("Insufficient balance to transfer")
-    }
-    let recipient_new_balance = recipient.checked_add(transfer_amount);
-    if recipient_new_balance.is_none() {
-        panic!("Recipient overflow")
-    }
+    // let sender_new_balance = sender.checked_sub(transfer_amount);
+    // if sender_new_balance.is_none() {
+    //     panic!("Insufficient balance to transfer")
+    // }
+    // let recipient_new_balance = recipient.checked_add(transfer_amount);
+    // if recipient_new_balance.is_none() {
+    //     panic!("Recipient overflow")
+    // }
 
-    env::commit(&sender_new_balance.unwrap().to_le_bytes());
-    env::commit(&recipient_new_balance.unwrap().to_le_bytes());
+    env::commit(&sender);
+    env::commit(&recipient);
+    env::commit(&transfer_amount);
 }
