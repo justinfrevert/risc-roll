@@ -16,25 +16,30 @@
 #![no_std]
 
 use risc0_zkvm::guest::env;
-
 risc0_zkvm::guest::entry!(main);
 
 pub fn main() {
-    // TODO: Need to figure out how to get this working... can't currently send u128s
-    let sender = env::read::<[u8; 16]>();
-    let recipient = env::read::<[u8; 16]>();
-    let transfer_amount = env::read::<[u8; 16]>();
+    let sender_bytes = env::read::<[u8; 16]>();
+    let recipient_bytes = env::read::<[u8; 16]>();
+    let transfer_amount_bytes = env::read::<[u8; 16]>();
 
-    // let sender_new_balance = sender.checked_sub(transfer_amount);
-    // if sender_new_balance.is_none() {
-    //     panic!("Insufficient balance to transfer")
-    // }
-    // let recipient_new_balance = recipient.checked_add(transfer_amount);
-    // if recipient_new_balance.is_none() {
-    //     panic!("Recipient overflow")
-    // }
+    let sender = u128::from_be_bytes(sender_bytes);
+    let recipient = u128::from_be_bytes(recipient_bytes);
+    let transfer_amount = u128::from_be_bytes(transfer_amount_bytes);
 
-    env::commit(&sender);
-    env::commit(&recipient);
-    env::commit(&transfer_amount);
+    let sender_new_balance = sender.checked_sub(transfer_amount);
+    if sender_new_balance.is_none() {
+        panic!("Insufficient balance to transfer")
+    }
+    let recipient_new_balance = recipient.checked_add(transfer_amount);
+    if recipient_new_balance.is_none() {
+        panic!("Recipient overflow")
+    }
+
+    env::commit(&(
+        sender_bytes,
+        sender_new_balance.unwrap().to_be_bytes(),
+        recipient_bytes,
+        recipient_new_balance.unwrap().to_be_bytes()
+    ))
 }
