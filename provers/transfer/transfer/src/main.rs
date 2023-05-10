@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use methods::{MULTIPLY_ELF, MULTIPLY_ID};
+use methods::{TRANSFER_ELF, TRANSFER_ID};
 
 use risc0_zkvm::{
     serde::{from_slice, to_vec},
@@ -69,6 +69,7 @@ async fn main() {
 
     let transfer_amount = 500_u128;
 
+    println!("sender balance: {:?}", alice_free_balance);
     let (receipt, _) = transfer(
         alice_free_balance,
         bob_free_balance,
@@ -78,7 +79,7 @@ async fn main() {
     // Here is where one would send 'receipt' over the network...
 
     // Verify receipt, panic if it's wrong
-    receipt.verify(MULTIPLY_ID).expect(
+    receipt.verify(TRANSFER_ID).expect(
         "Code you have proven should successfully verify; did you specify the correct image ID?",
     );
 
@@ -93,7 +94,7 @@ async fn main() {
     //         &myexamplenode::tx().template_module().send_factors_receipt(
     //             // receipt.journal,
     //             receipt.seal,
-    //             // MULTIPLY_ID
+    //             // TRANSFER_ID
     //         ),
     //         &signer
     //     )
@@ -104,17 +105,20 @@ async fn main() {
 }
 
 // Compute the transfer inside the zkvm
-fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> (SessionReceipt, u128) {
+fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> (
+    SessionReceipt,
+    [u8; 16]
+) {
     println!("starting");
     let env = ExecutorEnv::builder()
         // TODO: Figure out how to end u128s to guest here
-        .add_input(&to_vec(&sender).unwrap())
-        .add_input(&to_vec(&recipient).unwrap())
-        .add_input(&to_vec(&500).unwrap())
+        .add_input(&to_vec(&sender.to_be_bytes()).unwrap())
+        .add_input(&to_vec(&recipient.to_be_bytes()).unwrap())
+        .add_input(&to_vec(&500_u128.to_be_bytes()).unwrap())
         .build();
 
     // First, we make an executor, loading the 'multiply' ELF binary.
-    let mut exec = Executor::from_elf(env, MULTIPLY_ELF).unwrap();
+    let mut exec = Executor::from_elf(env, TRANSFER_ELF).unwrap();
 
     // Run the executor to produce a session.
     let session = exec.run().unwrap();
@@ -122,12 +126,14 @@ fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> (SessionRec
     // Prove the session to produce a receipt.
     let receipt = session.prove().unwrap();
 
-    let c: u128 = from_slice(&receipt.journal).expect(
+    println!("journal is {:?}",receipt.journal );
+
+    let c: [u8; 16] = from_slice(&receipt.journal).expect(
         "Journal output should deserialize into the same types (& order) that it was written",
     );
 
     // Print an assertion
-    println!("I know the factors of {}, and I can prove it!", c);
+    // println!("Transfer result {:?}!", u128::from_be_bytes(c).0);
 
     (receipt, c)
 }
