@@ -69,7 +69,7 @@ async fn main() {
 
     let transfer_amount = 500_u128;
 
-    println!("sender balance: {:?}", alice_free_balance);
+    println!("sender balance: {:?} recipient balance", alice_free_balance, bob_free_balance);
     let (receipt, _) = transfer(
         alice_free_balance,
         bob_free_balance,
@@ -84,9 +84,9 @@ async fn main() {
     );
 
     // TODO: Below needs update to use changes to receipts in 0.14.0
-    // let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
-    // let restored_key = SubxtPair::from_string("0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a", None).unwrap();
-    // let signer = PairSigner::new(restored_key);
+    let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
+    let restored_key = SubxtPair::from_string("0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a", None).unwrap();
+    let signer = PairSigner::new(restored_key);
 
     // api
     //     .tx()
@@ -94,22 +94,20 @@ async fn main() {
     //         &myexamplenode::tx().template_module().send_factors_receipt(
     //             // receipt.journal,
     //             receipt.seal,
-    //             // TRANSFER_ID
+    //             TRANSFER_ID
     //         ),
     //         &signer
     //     )
     //     .await.unwrap()
     //     .wait_for_finalized()
     //     .await.unwrap();
-
 }
 
 // Compute the transfer inside the zkvm
 fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> (
     SessionReceipt,
-    [u8; 16]
+    ([u8; 16], [u8; 16], [u8; 16], [u8; 16])
 ) {
-    println!("starting");
     let env = ExecutorEnv::builder()
         // TODO: Figure out how to end u128s to guest here
         .add_input(&to_vec(&sender.to_be_bytes()).unwrap())
@@ -126,14 +124,15 @@ fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> (
     // Prove the session to produce a receipt.
     let receipt = session.prove().unwrap();
 
-    println!("journal is {:?}",receipt.journal );
-
-    let c: [u8; 16] = from_slice(&receipt.journal).expect(
+    let c: ([u8; 16], [u8; 16], [u8; 16], [u8; 16]) = from_slice(&receipt.journal).expect(
         "Journal output should deserialize into the same types (& order) that it was written",
     );
 
+    let sender_result = u128::from_be_bytes(c.1);
+    let recipient_result = u128::from_be_bytes(c.3);
+
     // Print an assertion
-    // println!("Transfer result {:?}!", u128::from_be_bytes(c).0);
+    println!("Transfer result sender {:?}, recipient: {:?}", sender_result, recipient_result);
 
     (receipt, c)
 }

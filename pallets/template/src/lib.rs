@@ -24,7 +24,7 @@ pub mod pallet {
 	use risc0_zkvm::{
 		SessionReceipt, SegmentReceipt, sha::Digest
 	};
-	use crate::common::{MULTIPLY_IMAGE_ID, MULTIPLY_JOURNAL};
+	use crate::common::{TRANSFER_IMAGE_ID};
 	use sp_std::vec::Vec;
 
 	#[pallet::pallet]
@@ -57,7 +57,7 @@ pub mod pallet {
 		#[pallet::weight(1000000)]
 		#[pallet::call_index(0)]
 		// Risc0 factors example
-		pub fn send_factors_receipt(
+		pub fn rollup_transfer(
 			origin: OriginFor<T>,
 			seal: Vec<u32>,
 			substrate_segment_receipts: Vec<(Vec<u32>, u32)>,
@@ -73,7 +73,6 @@ pub mod pallet {
 				segments, journal
 			};
 
-			// FYI "multiply is a placeholder name from the template"
 			receipt.verify(Digest::new(MULTIPLY_IMAGE_ID)).map_err(|_| Error::<T>::FailedVerification)?;
 			Self::deposit_event(Event::<T>::VerificationSuccess);
 			Ok(())
