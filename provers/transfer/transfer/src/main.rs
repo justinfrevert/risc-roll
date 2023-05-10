@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use methods::{MULTIPLY_ELF, MULTIPLY_ID};
+use methods::{TRANSFER_ELF, TRANSFER_ID};
 
 use risc0_zkvm::{
     serde::{from_slice, to_vec},
@@ -79,7 +79,7 @@ async fn main() {
     // Here is where one would send 'receipt' over the network...
 
     // Verify receipt, panic if it's wrong
-    receipt.verify(MULTIPLY_ID).expect(
+    receipt.verify(TRANSFER_ID).expect(
         "Code you have proven should successfully verify; did you specify the correct image ID?",
     );
 
@@ -94,7 +94,7 @@ async fn main() {
     //         &myexamplenode::tx().template_module().send_factors_receipt(
     //             // receipt.journal,
     //             receipt.seal,
-    //             // MULTIPLY_ID
+    //             // TRANSFER_ID
     //         ),
     //         &signer
     //     )
@@ -118,7 +118,7 @@ fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> (
         .build();
 
     // First, we make an executor, loading the 'multiply' ELF binary.
-    let mut exec = Executor::from_elf(env, MULTIPLY_ELF).unwrap();
+    let mut exec = Executor::from_elf(env, TRANSFER_ELF).unwrap();
 
     // Run the executor to produce a session.
     let session = exec.run().unwrap();
