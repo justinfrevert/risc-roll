@@ -59,7 +59,6 @@ pub mod pallet {
 		// Risc0 factors example
 		pub fn rollup_transfer(
 			origin: OriginFor<T>,
-			seal: Vec<u32>,
 			substrate_segment_receipts: Vec<(Vec<u32>, u32)>,
 			journal: Vec<u8>
 		) -> DispatchResult {
@@ -73,7 +72,8 @@ pub mod pallet {
 				segments, journal
 			};
 
-			receipt.verify(Digest::new(MULTIPLY_IMAGE_ID)).map_err(|_| Error::<T>::FailedVerification)?;
+			receipt.verify(Digest::new(TRANSFER_IMAGE_ID)).map_err(|_| Error::<T>::FailedVerification)?;
+
 			Self::deposit_event(Event::<T>::VerificationSuccess);
 			Ok(())
 		}

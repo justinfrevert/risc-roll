@@ -16,7 +16,7 @@ use methods::{TRANSFER_ELF, TRANSFER_ID};
 
 use risc0_zkvm::{
     serde::{from_slice, to_vec},
-    Executor, ExecutorEnv, SessionReceipt,
+    Executor, ExecutorEnv, SegmentReceipt, SessionReceipt,
 };
 
 use subxt::{
@@ -69,14 +69,12 @@ async fn main() {
 
     let transfer_amount = 500_u128;
 
-    println!("sender balance: {:?} recipient balance", alice_free_balance, bob_free_balance);
+    println!("sender balance: {:?} recipient balance {:?}", alice_free_balance, bob_free_balance);
     let (receipt, _) = transfer(
         alice_free_balance,
         bob_free_balance,
         transfer_amount
     );
-
-    // Here is where one would send 'receipt' over the network...
 
     // Verify receipt, panic if it's wrong
     receipt.verify(TRANSFER_ID).expect(
@@ -88,19 +86,27 @@ async fn main() {
     let restored_key = SubxtPair::from_string("0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a", None).unwrap();
     let signer = PairSigner::new(restored_key);
 
-    // api
-    //     .tx()
-    //     .sign_and_submit_then_watch_default(
-    //         &myexamplenode::tx().template_module().send_factors_receipt(
-    //             // receipt.journal,
-    //             receipt.seal,
-    //             TRANSFER_ID
-    //         ),
-    //         &signer
-    //     )
-    //     .await.unwrap()
-    //     .wait_for_finalized()
-    //     .await.unwrap();
+    println!("transfer id {:?}", TRANSFER_ID);
+
+    // The segment receipts that SCALE can understand
+    let substrate_session_receipt = receipt.segments.into_iter().map(| SegmentReceipt { seal, index }| {
+        (seal, index)
+    }).collect();
+
+    println!("Sending tx");
+    api
+        .tx()
+        .sign_and_submit_then_watch_default(
+            &substrate_node::tx().template_module().rollup_transfer(
+                substrate_session_receipt,
+                receipt.journal
+            ),
+            &signer
+        )
+        .await.unwrap()
+        .wait_for_finalized()
+        .await.unwrap();
+    println!("Done");
 }
 
 // Compute the transfer inside the zkvm
