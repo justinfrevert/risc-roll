@@ -16,7 +16,7 @@ use methods::{TRANSFER_ELF, TRANSFER_ID};
 
 use risc0_zkvm::{
     serde::{from_slice, to_vec},
-    Executor, ExecutorEnv, SessionReceipt,
+    Executor, ExecutorEnv, SegmentReceipt, SessionReceipt,
 };
 
 use subxt::{
@@ -69,14 +69,12 @@ async fn main() {
 
     let transfer_amount = 500_u128;
 
-    println!("sender balance: {:?}", alice_free_balance);
-    let (receipt, _) = transfer(
+    println!("sender balance: {:?} recipient balance {:?}", alice_free_balance, bob_free_balance);
+    let receipt = transfer(
         alice_free_balance,
         bob_free_balance,
         transfer_amount
     );
-
-    // Here is where one would send 'receipt' over the network...
 
     // Verify receipt, panic if it's wrong
     receipt.verify(TRANSFER_ID).expect(
@@ -84,32 +82,37 @@ async fn main() {
     );
 
     // TODO: Below needs update to use changes to receipts in 0.14.0
-    // let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
-    // let restored_key = SubxtPair::from_string("0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a", None).unwrap();
-    // let signer = PairSigner::new(restored_key);
+    let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
+    let restored_key = SubxtPair::from_string("0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a", None).unwrap();
+    let signer = PairSigner::new(restored_key);
 
-    // api
-    //     .tx()
-    //     .sign_and_submit_then_watch_default(
-    //         &myexamplenode::tx().template_module().send_factors_receipt(
-    //             // receipt.journal,
-    //             receipt.seal,
-    //             // TRANSFER_ID
-    //         ),
-    //         &signer
-    //     )
-    //     .await.unwrap()
-    //     .wait_for_finalized()
-    //     .await.unwrap();
+    println!("transfer id {:?}", TRANSFER_ID);
 
+    // The segment receipts that SCALE can understand
+    let substrate_session_receipt = receipt.segments.into_iter().map(| SegmentReceipt { seal, index }| {
+        (seal, index)
+    }).collect();
+
+    println!("Sending tx");
+    api
+        .tx()
+        .sign_and_submit_then_watch_default(
+            &substrate_node::tx().template_module().rollup_transfer(
+                alice().public().into(),
+                bob().public().into(),
+                substrate_session_receipt,
+                receipt.journal
+            ),
+            &signer
+        )
+        .await.unwrap()
+        .wait_for_finalized()
+        .await.unwrap();
+    println!("Done");
 }
 
 // Compute the transfer inside the zkvm
-fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> (
-    SessionReceipt,
-    [u8; 16]
-) {
-    println!("starting");
+fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> SessionReceipt {
     let env = ExecutorEnv::builder()
         // TODO: Figure out how to end u128s to guest here
         .add_input(&to_vec(&sender.to_be_bytes()).unwrap())
@@ -125,15 +128,5 @@ fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> (
 
     // Prove the session to produce a receipt.
     let receipt = session.prove().unwrap();
-
-    println!("journal is {:?}",receipt.journal );
-
-    let c: [u8; 16] = from_slice(&receipt.journal).expect(
-        "Journal output should deserialize into the same types (& order) that it was written",
-    );
-
-    // Print an assertion
-    // println!("Transfer result {:?}!", u128::from_be_bytes(c).0);
-
-    (receipt, c)
+    receipt
 }
