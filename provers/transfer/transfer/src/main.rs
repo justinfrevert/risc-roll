@@ -68,70 +68,100 @@ pub(crate) struct Arguments {
 
 #[tokio::main]
 async fn main() {
-	let args = Arguments::parse();
+    let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
 
-	let sender_pair =
+    // // Retrieve alice and bob balances as they will serve as our sender and recipient, respectively
+    // let alice_result = account_query(&api, alice().public().into()).await;
+    // let bob_result = account_query(&api, bob().public().into()).await;
+
+    // let alice_free_balance = alice_result.unwrap().unwrap().data.free;
+    // let bob_free_balance = bob_result.unwrap().unwrap().data.free;
+
+    // let transfer_amount = 500_u128;
+
+    // TODO: get from input instead later
+    let transfers = get_from_json();
+
+	transfers.iter().map(|_| {
+		let sender_pair =
 		SubxtPair::from_seed(&array_bytes::hex2array_unchecked(&args.sender_hex_seed));
-	let sender_public_key = sender_pair.public();
-	let receiver_public_key = Public::from_raw(array_bytes::hex2array_unchecked(&args.receiver));
-	let transfer_amount = args.amount;
-	let message: [u8; 12] = array_bytes::hex2array_unchecked(&"68656c6c6f2c20776f726c64");
+		let sender_public_key = sender_pair.public();
+		let receiver_public_key = Public::from_raw(array_bytes::hex2array_unchecked(&args.receiver));
+		let transfer_amount = args.amount;
+		let message: [u8; 12] = array_bytes::hex2array_unchecked(&"68656c6c6f2c20776f726c64");
+	
+		let signature = Signature::from_raw(array_bytes::hex2array_unchecked(&args.sig));
+		if !verify_batch(vec![&message], vec![&signature], vec![&sender_public_key.into()]) {
+			panic!("Signature verification failed");
+		}
+	}).collect();
 
-	let signature = Signature::from_raw(array_bytes::hex2array_unchecked(&args.sig));
-	if !verify_batch(vec![&message], vec![&signature], vec![&sender_public_key.into()]) {
-		panic!("Signature verification failed");
-	}
-	// Retrieve sender and recipient
-	let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
-	let sender_result = account_query(&api, sender_public_key.into());
-	let receiver_result = account_query(&api, receiver_public_key.into());
-	let sender = sender_result.await;
-	let receiver = receiver_result.await;
 
-	let sender_free_balance = sender.unwrap().unwrap().data.free;
-	let receiver_free_balance = receiver.unwrap().unwrap().data.free;
+    // TODO: Maybe later we can send single integers representing accounts into the vm as an index
+    let accounts_set = std::collections::HashSet::new();
 
-	println!(
-		"sender balance: {:?} recipient balance {:?}",
-		sender_free_balance, receiver_free_balance
-	);
-	let receipt = transfer(sender_free_balance, receiver_free_balance, transfer_amount);
+    // Check all transfers and get list of accounts we need to check balances for(any account involved here)
+    transfers.iter().for_each(|(sender, recipient, _)| {
+        acccounts_set.insert(sender);
+        acccounts_set.insert(recipient);
+    });
 
-	// Verify receipt, panic if it's wrong
-	receipt.verify(TRANSFER_ID).expect(
-		"Code you have proven should successfully verify; did you specify the correct image ID?",
-	);
+    let mut balances = vec![];
+    for account in accounts_set {
+        let balance_query_result = account_query(&api, account.public().into()).await;
+        let free_balance = balance_query_result.unwrap().unwrap().data.free;
+        balances.push(free_balance);
+    }
 
-	// TODO: Below needs update to use changes to receipts in 0.14.0
-	let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
-	let signer = PairSigner::new(sender_pair);
+    let accounts_set: Vec<_> = accounts_set.iter().collect();
 
-	println!("transfer id {:?}", TRANSFER_ID);
+    // Avoid sending the full accountsi nto the vm, we'll just send an index of each account in `accounts_set`, which is the same order as `balances`.
+    // So, the vm can use the indices to lookup account(balance) info from `balances`
+    let transfers_with_indexed_accounts = transfers.iter().map(|(sender, recipient, balance)| {
+        let sender_index = accounts_set.iter().position(|r| r == sender).unwrap();
+        let recipient_index = accounts_set.iter().position(|r| r == recipient).unwrap();
+        (sender_index, recipient_index, balance)
+    }).collect();
 
-	// The segment receipts that SCALE can understand
-	let substrate_session_receipt = receipt
-		.segments
-		.into_iter()
-		.map(|SegmentReceipt { seal, index }| (seal, index))
-		.collect();
+    println!("sender balance: {:?} recipient balance {:?}", alice_free_balance, bob_free_balance);
+    let receipt = transfer_batch(
+        balances,
+        transfers_with_indexed_accounts
+    );
 
-	println!("Sending tx");
-	api.tx()
-		.sign_and_submit_then_watch_default(
-			&substrate_node::tx().template_module().rollup_transfer(
-				sender_public_key.into(),
-				receiver_public_key.into(),
-				substrate_session_receipt,
-				receipt.journal,
-			),
-			&signer,
-		)
-		.await
-		.unwrap()
-		.wait_for_finalized()
-		.await
-		.unwrap();
-	println!("Done");
+    // Verify receipt, panic if it's wrong
+    receipt.verify(TRANSFER_ID).expect(
+        "Code you have proven should successfully verify; did you specify the correct image ID?",
+    );
+
+    // TODO: Below needs update to use changes to receipts in 0.14.0
+    let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
+    let restored_key = SubxtPair::from_string("0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a", None).unwrap();
+    let signer = PairSigner::new(restored_key);
+
+    println!("transfer id {:?}", TRANSFER_ID);
+
+    // The segment receipts that SCALE can understand
+    let substrate_session_receipt = receipt.segments.into_iter().map(| SegmentReceipt { seal, index }| {
+        (seal, index)
+    }).collect();
+
+    println!("Sending tx");
+    api
+        .tx()
+        .sign_and_submit_then_watch_default(
+            &substrate_node::tx().template_module().rollup_transfer(
+                alice().public().into(),
+                bob().public().into(),
+                substrate_session_receipt,
+                receipt.journal
+            ),
+            &signer
+        )
+        .await.unwrap()
+        .wait_for_finalized()
+        .await.unwrap();
+    println!("Done");
 }
 
 // Compute the transfer inside the zkvm
@@ -152,4 +182,33 @@ fn transfer(sender: u128, recipient: u128, transfer_amount: u128) -> SessionRece
 	// Prove the session to produce a receipt.
 	let receipt = session.prove().unwrap();
 	receipt
+}
+
+// Compute the transfer inside the zkvm
+fn transfer_batch(balances: Vec<u128>, transfers_with_indexed_accounts: Vec<(u8, u8, u128)>) -> SessionReceipt {
+    // "compatible" here meaning u128s are converted to bytes for the vm to be able to use
+    let compatible_balances = balances.iter().map(|balance| {
+        balance.to_be_bytes()
+    }).collect();
+
+    let compatible_transfers_with_indexed_accounts = transfers_with_indexed_accounts.iter().map(|sender, recipient, balance| {
+        // balance.to_be_bytes()
+        (sender, recipient, balance.to_be_bytes())
+    }).collect();
+
+    let env = ExecutorEnv::builder()
+        // TODO: Figure out how to end u128s to guest here
+        .add_input(&to_vec(&compatible_balances).unwrap())
+        .add_input(&to_vec(&compatible_transfers_with_indexed_accounts).unwrap())
+        .build();
+
+    // First, we make an executor, loading the 'multiply' ELF binary.
+    let mut exec = Executor::from_elf(env, TRANSFER_ELF).unwrap();
+
+    // Run the executor to produce a session.
+    let session = exec.run().unwrap();
+
+    // Prove the session to produce a receipt.
+    let receipt = session.prove().unwrap();
+    receipt
 }

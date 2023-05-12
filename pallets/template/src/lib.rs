@@ -83,7 +83,7 @@ pub mod pallet {
 			receipt.verify(Digest::new(TRANSFER_IMAGE_ID)).map_err(|_| Error::<T>::FailedVerification)?;
 
 			// sender original, sender final, recipient original, recipient final
-			let (sender_original_bytes, sender_result_bytes, recipient_original_bytes, recipient_result_bytes): ([u8; 16], [u8; 16], [u8; 16], [u8; 16]) = from_slice(&receipt.journal).expect(
+			let (sender_original_bytes, sender_result_bytes, recipient_original_bytes, recipient_result_bytes): (Vec<[u8; 16]>, Vec<[u8; 16]>) = from_slice(&receipt.journal).expect(
 				"Journal output should deserialize into the same types (& order) that it was written",
 			);
 

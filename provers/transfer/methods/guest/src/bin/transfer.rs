@@ -18,28 +18,67 @@
 use risc0_zkvm::guest::env;
 risc0_zkvm::guest::entry!(main);
 
+// pub fn main() {
+//     let sender_bytes = env::read::<[u8; 16]>();
+//     let recipient_bytes = env::read::<[u8; 16]>();
+//     let transfer_amount_bytes = env::read::<[u8; 16]>();
+
+//     let sender = u128::from_be_bytes(sender_bytes);
+//     let recipient = u128::from_be_bytes(recipient_bytes);
+//     let transfer_amount = u128::from_be_bytes(transfer_amount_bytes);
+
+//     let sender_new_balance = sender.checked_sub(transfer_amount);
+//     if sender_new_balance.is_none() {
+//         panic!("Insufficient balance to transfer")
+//     }
+//     let recipient_new_balance = recipient.checked_add(transfer_amount);
+//     if recipient_new_balance.is_none() {
+//         panic!("Recipient overflow")
+//     }
+
+//     env::commit(&(
+//         sender_bytes,
+//         sender_new_balance.unwrap().to_be_bytes(),
+//         recipient_bytes,
+//         recipient_new_balance.unwrap().to_be_bytes()
+//     ))
+// }
+
 pub fn main() {
-    let sender_bytes = env::read::<[u8; 16]>();
-    let recipient_bytes = env::read::<[u8; 16]>();
-    let transfer_amount_bytes = env::read::<[u8; 16]>();
+    let balances_bytes = env::read::<Vec<[u8; 16]>>();
+    let transfers_with_indexed_accounts_bytes = env::read::<Vec<[u8; 16]>>();
 
-    let sender = u128::from_be_bytes(sender_bytes);
-    let recipient = u128::from_be_bytes(recipient_bytes);
-    let transfer_amount = u128::from_be_bytes(transfer_amount_bytes);
+    let mut balances = balances_bytes.iter().map(|balance| {
+        u128::from_be_bytes(balance)
+    }).collect();
 
-    let sender_new_balance = sender.checked_sub(transfer_amount);
-    if sender_new_balance.is_none() {
-        panic!("Insufficient balance to transfer")
-    }
-    let recipient_new_balance = recipient.checked_add(transfer_amount);
-    if recipient_new_balance.is_none() {
-        panic!("Recipient overflow")
-    }
+    let mut transfers_with_indexed_accounts = transfers_with_indexed_accounts_bytes
+        .iter().map(|(sender_index, recipient_index, balance)| {
+            (sender_index, recipient_index, u128::from_be_bytes(balance))
+        }).collect();
+
+    
+    transfers_with_indexed_accounts.iter().for_each(|(sender_index, recipient_index, transfer_balance)| {
+        let sender_balance = balances[sender_index];
+        let recipient_balance = balances[recipient_index];
+
+        let sender_new_balance = sender_balance.checked_sub(transfer_balance);
+        if sender_new_balance.is_none() {
+            panic!("Insufficient balance to transfer")
+        }
+        let recipient_new_balance = recipient_balance.checked_add(transfer_balance);
+        if recipient_new_balance.is_none() {
+            panic!("Recipient overflow")
+        }
+
+        balances[sender_index] = sender_new_balance;
+        balances[recipient_index] = recipient_new_balance;
+    });
 
     env::commit(&(
-        sender_bytes,
-        sender_new_balance.unwrap().to_be_bytes(),
-        recipient_bytes,
-        recipient_new_balance.unwrap().to_be_bytes()
+        // Old balances
+        balances_bytes,
+        // New balances
+        balances
     ))
 }
