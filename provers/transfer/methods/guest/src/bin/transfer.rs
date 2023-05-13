@@ -16,6 +16,8 @@
 #![no_std]
 
 use risc0_zkvm::guest::env;
+use sp_std::vec::Vec;
+
 risc0_zkvm::guest::entry!(main);
 
 // pub fn main() {
@@ -46,19 +48,19 @@ risc0_zkvm::guest::entry!(main);
 
 pub fn main() {
     let balances_bytes = env::read::<Vec<[u8; 16]>>();
-    let transfers_with_indexed_accounts_bytes = env::read::<Vec<[u8; 16]>>();
+    let transfers_with_indexed_accounts_bytes = env::read::<Vec<(usize, usize, [u8; 16])>>();
 
-    let mut balances = balances_bytes.iter().map(|balance| {
+    let mut balances: Vec<u128> = balances_bytes.clone().into_iter().map(|balance| {
         u128::from_be_bytes(balance)
     }).collect();
 
-    let mut transfers_with_indexed_accounts = transfers_with_indexed_accounts_bytes
-        .iter().map(|(sender_index, recipient_index, balance)| {
+    let transfers_with_indexed_accounts: Vec<(usize, usize, u128)> =
+        transfers_with_indexed_accounts_bytes
+        .clone().into_iter().map(|(sender_index, recipient_index, balance)| {
             (sender_index, recipient_index, u128::from_be_bytes(balance))
         }).collect();
 
-    
-    transfers_with_indexed_accounts.iter().for_each(|(sender_index, recipient_index, transfer_balance)| {
+    transfers_with_indexed_accounts.into_iter().for_each(|(sender_index, recipient_index, transfer_balance)| {
         let sender_balance = balances[sender_index];
         let recipient_balance = balances[recipient_index];
 
@@ -71,8 +73,8 @@ pub fn main() {
             panic!("Recipient overflow")
         }
 
-        balances[sender_index] = sender_new_balance;
-        balances[recipient_index] = recipient_new_balance;
+        balances[sender_index] = sender_new_balance.unwrap();
+        balances[recipient_index] = recipient_new_balance.unwrap();
     });
 
     env::commit(&(
