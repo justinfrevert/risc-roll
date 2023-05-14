@@ -20,32 +20,6 @@ use sp_std::vec::Vec;
 
 risc0_zkvm::guest::entry!(main);
 
-// pub fn main() {
-//     let sender_bytes = env::read::<[u8; 16]>();
-//     let recipient_bytes = env::read::<[u8; 16]>();
-//     let transfer_amount_bytes = env::read::<[u8; 16]>();
-
-//     let sender = u128::from_be_bytes(sender_bytes);
-//     let recipient = u128::from_be_bytes(recipient_bytes);
-//     let transfer_amount = u128::from_be_bytes(transfer_amount_bytes);
-
-//     let sender_new_balance = sender.checked_sub(transfer_amount);
-//     if sender_new_balance.is_none() {
-//         panic!("Insufficient balance to transfer")
-//     }
-//     let recipient_new_balance = recipient.checked_add(transfer_amount);
-//     if recipient_new_balance.is_none() {
-//         panic!("Recipient overflow")
-//     }
-
-//     env::commit(&(
-//         sender_bytes,
-//         sender_new_balance.unwrap().to_be_bytes(),
-//         recipient_bytes,
-//         recipient_new_balance.unwrap().to_be_bytes()
-//     ))
-// }
-
 pub fn main() {
     let balances_bytes = env::read::<Vec<[u8; 16]>>();
     let transfers_with_indexed_accounts_bytes = env::read::<Vec<(usize, usize, [u8; 16])>>();
@@ -63,10 +37,10 @@ pub fn main() {
     transfers_with_indexed_accounts.into_iter().for_each(|(sender_index, recipient_index, transfer_balance)| {
         let sender_balance = balances[sender_index];
         let recipient_balance = balances[recipient_index];
-
         let sender_new_balance = sender_balance.checked_sub(transfer_balance);
+
         if sender_new_balance.is_none() {
-            panic!("Insufficient balance to transfer")
+            panic!("Insufficient balance to transfer. Have: {:?}, tried to send {:?}", sender_balance, transfer_balance)
         }
         let recipient_new_balance = recipient_balance.checked_add(transfer_balance);
         if recipient_new_balance.is_none() {
@@ -77,10 +51,12 @@ pub fn main() {
         balances[recipient_index] = recipient_new_balance.unwrap();
     });
 
+    let new_balances_bytes: Vec<[u8; 16]> = balances.into_iter().map(|b| b.to_be_bytes()).collect();
+
     env::commit(&(
         // Old balances
         balances_bytes,
         // New balances
-        balances
+        new_balances_bytes
     ))
 }

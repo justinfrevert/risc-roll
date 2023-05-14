@@ -49,22 +49,13 @@ type ApiType = OnlineClient<WithExtrinsicParams<SubstrateConfig, BaseExtrinsicPa
 
 async fn account_query(api: &ApiType, account: AccountId32)  -> Result<Option<AccountInfo<u32, AccountData<u128>>>, subxt::Error> {
     let query = substrate_node::storage().system().account(&account);
-    let query_result = api.storage().fetch(&query, None).await;
+    let query_result = api.storage().fetch(&query, None).await;    
 	query_result
 }
 
 #[tokio::main]
 async fn main() {
     let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
-
-    // // Retrieve alice and bob balances as they will serve as our sender and recipient, respectively
-    // let alice_result = account_query(&api, alice().public().into()).await;
-    // let bob_result = account_query(&api, bob().public().into()).await;
-
-    // let alice_free_balance = alice_result.unwrap().unwrap().data.free;
-    // let bob_free_balance = bob_result.unwrap().unwrap().data.free;
-
-    // let transfer_amount = 500_u128;
 
     // TODO: get from input instead later
     let transfers = get_from_json();
@@ -101,9 +92,7 @@ async fn main() {
     for account in accounts_set.clone() {
         let account: AccountId32 = account.clone().into();
         accounts_decoded.push(account.clone());
-
-        let balance_query_result = account_query(&api, account).await;
-        // let free_balance = balance_query_result.unwrap().unwrap().data.free;
+        let balance_query_result = account_query(&api, account.clone()).await;
         let free_balance = balance_query_result.unwrap().map_or(0, |balance| balance.data.free);
         balances.push(free_balance);
     }

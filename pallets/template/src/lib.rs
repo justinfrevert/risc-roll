@@ -61,11 +61,12 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> where BalanceOf<T>: From<u128>{
 		#[pallet::weight(1000000)]
 		#[pallet::call_index(0)]
-		pub fn rollup_transfer(
+		pub fn rollup_transfers(
 			origin: OriginFor<T>,
-			sender: T::AccountId,
-			recipient: T::AccountId,
+			// All accounts that were changed, in order
+			accounts: Vec<T::AccountId>,
 			substrate_segment_receipts: Vec<(Vec<u32>, u32)>,
+			// journal of (Vec<old balances>, Vec<new_balances>), both in order
 			journal: Vec<u8>
 		) -> DispatchResult {
 			// TODO: Look into whether there is a configuration where we don't need this extra signature check due to the other verifications
@@ -87,13 +88,11 @@ pub mod pallet {
 				"Journal output should deserialize into the same types (& order) that it was written",
 			);
 
-			// TOD: Add sender and recipient accounts to journal
-			let sender_result = u128::from_be_bytes(sender_result_bytes);
-			let recipient_result = u128::from_be_bytes(recipient_result_bytes);
-			
-			// TODO: Check if there is a broader way to set new state 
-			T::Currency::make_free_balance_be(&sender, sender_result.into());
-			T::Currency::make_free_balance_be(&recipient, recipient_result.into());
+			accounts.into_iter().zip(balances.into_iter()).for_each(|(account, balance)| {
+				let balance = u128::from_be_bytes(balance);
+				// TODO: Check if there is a broader way to set new state 
+				T::Currency::make_free_balance_be(&account, balance.into());
+			});
 
 			Self::deposit_event(Event::<T>::VerificationSuccess);
 			Ok(())
