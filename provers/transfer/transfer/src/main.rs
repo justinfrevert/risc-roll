@@ -134,8 +134,6 @@ async fn main() {
         .tx()
         .sign_and_submit_then_watch_default(
             &substrate_node::tx().template_module().rollup_transfers(
-                // alice().public().into(),
-                // bob().public().into(),
                 accounts_decoded,
                 substrate_session_receipt,
                 receipt.journal
