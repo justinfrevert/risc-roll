@@ -29,30 +29,20 @@ pub fn main() {
     }).collect();
 
     let transfers_with_indexed_accounts: Vec<(usize, usize, u128)> =
-        transfers_with_indexed_accounts_bytes
-        .clone().into_iter().map(|(sender_index, recipient_index, balance)| {
+        transfers_with_indexed_accounts_bytes.clone().into_iter().map(|(sender_index, recipient_index, balance)| {
             (sender_index, recipient_index, u128::from_be_bytes(balance))
         }).collect();
 
     transfers_with_indexed_accounts.into_iter().for_each(|(sender_index, recipient_index, transfer_balance)| {
         let sender_balance = balances[sender_index];
         let recipient_balance = balances[recipient_index];
-        let sender_new_balance = sender_balance.checked_sub(transfer_balance);
 
-        if sender_new_balance.is_none() {
-            panic!("Insufficient balance to transfer. Have: {:?}, tried to send {:?}", sender_balance, transfer_balance)
-        }
-        let recipient_new_balance = recipient_balance.checked_add(transfer_balance);
-        if recipient_new_balance.is_none() {
-            panic!("Recipient overflow")
-        }
-
-        balances[sender_index] = sender_new_balance.unwrap();
-        balances[recipient_index] = recipient_new_balance.unwrap();
+        balances[sender_index] = sender_balance.checked_sub(transfer_balance).unwrap();
+        balances[recipient_index] =  recipient_balance.checked_add(transfer_balance).unwrap();
     });
 
     let new_balances_bytes: Vec<[u8; 16]> = balances.into_iter().map(|b| b.to_be_bytes()).collect();
-
+    
     env::commit(&(
         // Old balances
         balances_bytes,
