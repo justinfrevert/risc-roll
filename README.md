@@ -15,3 +15,5 @@ The project provides a POC for zkrollup-like systems built using Risc0.
 The project consists of:
 - An offchain prover, which takes some representation of transactions as input, and computes the transfers, outputting a proof as well as the new balances
 - A substrate node, with a pallet that performs verification of the STARK proof sent by the prover
+
+![image](https://github.com/justinFrevert/substrate-web3athon-2023/assets/81839854/c84f8819-57a8-46a8-8232-bcab2da2480e)
