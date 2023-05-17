@@ -17,6 +17,7 @@ Our project has the following objectives:
 To maintain focus and deliver a meaningful POC, our project has the following scope:
 
 - No Custom VM or Substrate Executor: We won't be implementing a custom virtual machine or reimagining Substrate's executor for proving arbitrary extrinsics. Instead, our focus is on demonstrating the proving, verification, and balance transfer capabilities.
+- This is not production ready, and makes no claims to be a proper rollup.
 
 ## Project Overview
 
