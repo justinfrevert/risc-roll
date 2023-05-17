@@ -5,12 +5,13 @@ edition = "2021"
 
 [dependencies]
 methods = { path = "../methods" }
-risc0-zkvm = "0.14.0"
+# risc0-zkvm = "0.14.0"
 # TODO: without following line it does not build on my system.
-# risc0-zkvm = {path = "/home/vivek/dev/risc0/risc0/zkvm"}
+risc0-zkvm = {path = "/home/vivek/dev/risc0/risc0/zkvm"}
 serde = "1.0"
 tokio = { version = "1", features = ["full"] }
 subxt = { version = "0.25.0" }
 codec = { package = "parity-scale-codec", version = "3.2.2", default-features = false, features = ["derive"] }
 sp-core = { version = "7.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
 clap = { version = "4.2.7", features = ["derive"] }
+array-bytes = "6.1.0"
