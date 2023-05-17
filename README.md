@@ -1,6 +1,8 @@
 # Substrate with Risc0 Web3athon Project
+### "Trustlessly offload computations of Substrate chains with zk proofs, without the zk learning curve"
 
-Welcome to the Substrate with Risc0 Web3athon project! This repository serves as a Proof of Concept (POC) for zkrollup-like systems built using Risc0. Our goal is to explore the possibilities of enabling Substrate/rust developers to build zk rollups in rust, eliminating the need for writing circuits. By leveraging the power of Risc0 and Rollup architecture, we aim to create an efficient and scalable solution for Substrate extrinsics.
+
+Welcome to the Substrate with Risc0 Web3athon project! This repository serves as a Proof of Concept (POC) for partial zkrollups of Substrate chains, built using Risc0. Our goal is to explore the possibilities of enabling Substrate/rust developers to build zk rollups in rust, eliminating the need for writing circuits. By leveraging the power of Risc0 and Rollup architecture, we aim to create an efficient and scalable solution for Substrate extrinsics.
 
 ## Goals
 
@@ -23,7 +25,8 @@ In addition, the project has or aims to have the following properties:
 
 To maintain focus and deliver a meaningful POC, our project has the following scope:
 
-- No Custom VM or Substrate Executor: We won't be implementing a custom virtual machine or reimagining Substrate's executor for proving arbitrary extrinsics. Instead, our focus is on demonstrating the proving, verification, and balance transfer capabilities. A Substrate extrinsic analogue to this approach might be some system or tooling which can convert Substrate pallets or traits to a Risc0 zkvm-friendly format 💡.
+- No Custom VM or Substrate Executor: We won't be implementing a custom virtual machine or reimagining Substrate's executor for proving arbitrary extrinsics. Instead, our focus is on demonstrating the proving, verification, and balance transfer capabilities. 
+  - A Substrate extrinsic analogue to this approach might be some system or tooling which can convert Substrate pallets or traits to a Risc0 zkvm-friendly format 💡.
 - This is not production ready, and makes no claims to be a proper rollup.
 - The project does not use recursive proofs, as this is not currently supported in Risc0. 
 
@@ -44,4 +47,4 @@ The offchain component communicates with the substrate node using Subxt. The pri
 The prover performance is promising, given that the Risc0 project is extremely early. They are likely to improve the prover speed significantly as time goes on. 
 
 Macbook i7
-- 50 transfer extrinsics: 30 secs
+- 50 transfer extrinsics: 28 secs
