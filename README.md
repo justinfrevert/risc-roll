@@ -26,4 +26,6 @@ Our project comprises the following components:
 
 - Substrate Node with Verification Pallet: We have developed a Substrate node integrated with a verification pallet. The verification pallet is responsible for validating the STARK proof sent by the offchain prover, ensuring the integrity and correctness of the computed transfers.
 
+The offchain component communicates with the substrate node using Subxt. The primary communications are RPC queries for state information and extrinsic submissions for submitting the proofs + their relevant data.
+
 ![image](https://github.com/justinFrevert/substrate-web3athon-2023/assets/81839854/c84f8819-57a8-46a8-8232-bcab2da2480e)
