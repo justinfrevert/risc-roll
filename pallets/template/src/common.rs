@@ -1,2 +1,2 @@
 /// The image id is unique per our program as it is a hash of some representation of the zkvm state. We can also obtain this from running the host code
-pub const TRANSFER_IMAGE_ID: [u32; 8] = [3649346100, 1542777633, 3527262800, 3717055309, 3995217630, 983323782, 1522567905, 1232894445];
+pub const TRANSFER_IMAGE_ID: [u32; 8] = [2486594279, 3606083639, 1255207922, 1378868077, 124846865, 115852313, 638666934, 300636237];

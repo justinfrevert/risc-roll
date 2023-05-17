@@ -14,9 +14,10 @@
 
 use methods::{TRANSFER_ELF, TRANSFER_ID};
 
-use risc0_zkvm::{serde::to_vec, Executor, ExecutorEnv, SegmentReceipt, SessionReceipt};
-
-use clap::Parser;
+use risc0_zkvm::{
+    serde::{from_slice, to_vec},
+    Executor, ExecutorEnv, SegmentReceipt, SessionReceipt,
+};
 use subxt::{
 	config::WithExtrinsicParams,
 	ext::{
@@ -29,9 +30,9 @@ use subxt::{
 	tx::{BaseExtrinsicParams, PairSigner, PlainTip},
 	OnlineClient, PolkadotConfig, SubstrateConfig,
 };
-
 use codec::{Encode, Decode};
 use sp_keyring::AccountKeyring;
+use std::time::{Duration, Instant};
 
 // // Runtime types, etc
 #[subxt::subxt(runtime_metadata_path = "./metadata.scale")]
@@ -56,6 +57,8 @@ async fn account_query(api: &ApiType, account: AccountId32)  -> Result<Option<Ac
 #[tokio::main]
 async fn main() {
     let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
+
+    println!("Preparing transfers...");
 
     // TODO: get from input instead later
     let transfers = get_from_json();
@@ -158,7 +161,6 @@ fn transfer_batch(balances: Vec<u128>, transfers_with_indexed_accounts: Vec<(usi
     }).collect();
 
     let env = ExecutorEnv::builder()
-        // TODO: Figure out how to end u128s to guest here
         .add_input(&to_vec(&compatible_balances).unwrap())
         .add_input(&to_vec(&compatible_transfers_with_indexed_accounts).unwrap())
         .build();
@@ -166,11 +168,16 @@ fn transfer_batch(balances: Vec<u128>, transfers_with_indexed_accounts: Vec<(usi
     // First, we make an executor, loading the 'multiply' ELF binary.
     let mut exec = Executor::from_elf(env, TRANSFER_ELF).unwrap();
 
+    println!("Now running transfer txes in guest");
+    let guest_start_time = Instant::now();
     // Run the executor to produce a session.
     let session = exec.run().unwrap();
 
     // Prove the session to produce a receipt.
     let receipt = session.prove().unwrap();
+    let elapsed = guest_start_time.elapsed();
+    println!("Guest done proving txes in {:?} sec {:?} ms", elapsed.as_secs(), elapsed.subsec_millis());
+
     receipt
 }
 
