@@ -12,21 +12,36 @@ Our project has the following objectives:
 
 - Performance Evaluation: We will evaluate the performance of Risc0 proving for various computations and assess whether it meets the requirements for processing Substrate extrinsics efficiently.
 
+### Desired Properties
+In addition, the project has or aims to have the following properties:
+- Partial
+  -   The project serves as a partial rollup, where it cannot validate all transactions, but is only built to rollup a subset of possible transactions. This is mainly for PoC purposes, but serves as an example to other developers on how extrinsics can be selected to be offloaded to the a rollup, and easily re-written or copied as plain rust to the Risc0 guest.
+- Enshrinement
+  - Substrate makes it simple to swap out the transaction verification with a custom one. At some point, we will remove the usual transaction origin verification checking and replace with the receipt verification. This can be implemented in Substrate pallet unsigned verification logic to serve as a replacement for the default transaction checking logic.   
+
 ## Scope
 
 To maintain focus and deliver a meaningful POC, our project has the following scope:
 
-- No Custom VM or Substrate Executor: We won't be implementing a custom virtual machine or reimagining Substrate's executor for proving arbitrary extrinsics. Instead, our focus is on demonstrating the proving, verification, and balance transfer capabilities.
+- No Custom VM or Substrate Executor: We won't be implementing a custom virtual machine or reimagining Substrate's executor for proving arbitrary extrinsics. Instead, our focus is on demonstrating the proving, verification, and balance transfer capabilities. A Substrate extrinsic analogue to this approach might be some system or tooling which can convert Substrate pallets or traits to a Risc0 zkvm-friendly format 💡.
 - This is not production ready, and makes no claims to be a proper rollup.
+- The project does not use recursive proofs, as this is not currently supported in Risc0. 
 
 ## Project Overview
 
 Our project comprises the following components:
 
-- Offchain Prover: This module takes a representation of transactions as input and computes the transfers. It generates a proof using the Risc0 technology, allowing for efficient verification. Additionally, it provides the updated balances after the transfers.
+- Offchain Prover: This module takes a representation of transactions as input and computes the transfers. It generates a proof of these operations. Additionally, it provides the updated balances after the transfers.
 
 - Substrate Node with Verification Pallet: We have developed a Substrate node integrated with a verification pallet. The verification pallet is responsible for validating the STARK proof sent by the offchain prover, ensuring the integrity and correctness of the computed transfers.
 
 The offchain component communicates with the substrate node using Subxt. The primary communications are RPC queries for state information and extrinsic submissions for submitting the proofs + their relevant data.
 
 ![image](https://github.com/justinFrevert/substrate-web3athon-2023/assets/81839854/c84f8819-57a8-46a8-8232-bcab2da2480e)
+
+
+## Performance
+The prover performance is promising, given that the Risc0 project is extremely early. They are likely to improve the prover speed significantly as time goes on. 
+
+Macbook i7
+- 50 transfer extrinsics: 30 secs
