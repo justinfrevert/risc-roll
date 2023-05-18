@@ -48,3 +48,11 @@ The prover performance is promising, given that the Risc0 project is extremely e
 
 Macbook i7
 - 50 transfer extrinsics: 28 secs
+
+## Future Improvements
+As of writing, this project is largely a POC and learning exercise first and foremost. However, we believe that a more accessible verifiable computing environment will open the door to many new types of projects. We're interested in ways to more deeply ingrain the technology into Substrate tools. The following are ideas we'd like to explore in the future
+
+- Rollup any pallet
+  - Generate Risc0 guest code to rollup (most)any pallet. This would allow substrate developers to freely and selectively offload heavy portions of their chain.
+- Faster proving times
+  - Through optimizations and natural progression of Risc0's technology the speed of proving transactions will improve.
