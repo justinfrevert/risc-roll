@@ -18,7 +18,7 @@ Our project has the following objectives:
 To maintain focus and deliver a meaningful POC, our project has the following scope:
 
 - No Custom VM or Substrate Executor
-  - Most zk rollups implement the VM of their chain for a number of reasons. We have a few reasons for not doing this, one of them being hacakthon scope. Instead, our approach is to execute pallet code inside the zkvm.
+  - Most zk rollups implement the VM of their chain for a number of reasons. We have a few reasons for not doing this, one of them being hacakthon scope. Instead, our approach is to execute pallet code or a simplification of a given pallet's code inside the zkvm.
 - This is **not** production ready, and makes no claims to be a proper rollup.
 - The project does not use recursive proofs, as this is not currently supported in Risc0. Support for this will come soon, and we plan to implement it when ready.
 - Only one extrinsic(transaction) type is supported: balance transfers. Later, we could develop functionality to generate guest code out of Substrate pallets.
