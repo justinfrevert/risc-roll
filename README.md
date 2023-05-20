@@ -1,7 +1,7 @@
 # Risc-roll
 ### "Trustlessly offload computations of Substrate chains with zk proofs, without the zk learning curve"
 
-This repository serves as a Proof of Concept (POC) for *partial* zkrollups of Substrate chains. Our goal is to explore the possibilities of enabling Substrate/rust developers to build zk rollups in rust, eliminating the need for writing circuits. By leveraging the power of Risc0 and Rollup architecture, we aim to create an efficient and scalable solution for Substrate extrinsics.
+This repository serves as a Proof of Concept (POC) for *partial* zkrollups of Substrate chains. Our goal is to explore the possibilities of enabling Substrate/rust developers to build zk rollups in *plain rust*, eliminating the need for writing circuits. By leveraging the power of Risc0 and Rollup architecture, we aim to create an efficient and scalable solution for Substrate extrinsics.
 
 *This project was developed over the course of one month at the 2023 Consensus Web3athon*
 
