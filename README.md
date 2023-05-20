@@ -23,9 +23,6 @@ To maintain focus and deliver a meaningful POC, our project has the following sc
 - The project does not use recursive proofs, as this is not currently supported in Risc0. Support for this will come soon, and we plan to implement it when ready.
 - Only one extrinsic(transaction) type is supported: balance transfers. Later, we could develop functionality to generate guest code out of Substrate pallets.
 
-## Rollup
-At this stage, our zkvm simply uses Rust code that is similar to the on-chain logic that is being represented. 
-
 ## Project Overview
 Our project comprises the following components:
 
