@@ -5595,7 +5595,7 @@ dependencies = [
 [[package]]
 name = "risc0-circuit-rv32im"
 version = "0.14.0"
-source = "git+https://github.com/risc0/risc0#84528d31c0efad566e585aa04a83d6692b32bd16"
+source = "git+https://github.com/risc0/risc0?rev=d83c7fef80d0ebb87bc86567447efee633a24c4e#d83c7fef80d0ebb87bc86567447efee633a24c4e"
 dependencies = [
  "anyhow",
  "log",
@@ -5608,7 +5608,7 @@ dependencies = [
 [[package]]
 name = "risc0-core"
 version = "0.14.0"
-source = "git+https://github.com/risc0/risc0#84528d31c0efad566e585aa04a83d6692b32bd16"
+source = "git+https://github.com/risc0/risc0?rev=d83c7fef80d0ebb87bc86567447efee633a24c4e#d83c7fef80d0ebb87bc86567447efee633a24c4e"
 dependencies = [
  "bytemuck",
  "rand_core 0.6.4",
@@ -5617,7 +5617,7 @@ dependencies = [
 [[package]]
 name = "risc0-zkp"
 version = "0.14.0"
-source = "git+https://github.com/risc0/risc0#84528d31c0efad566e585aa04a83d6692b32bd16"
+source = "git+https://github.com/risc0/risc0?rev=d83c7fef80d0ebb87bc86567447efee633a24c4e#d83c7fef80d0ebb87bc86567447efee633a24c4e"
 dependencies = [
  "anyhow",
  "blake2",
@@ -5637,7 +5637,7 @@ dependencies = [
 [[package]]
 name = "risc0-zkvm"
 version = "0.14.0"
-source = "git+https://github.com/risc0/risc0#84528d31c0efad566e585aa04a83d6692b32bd16"
+source = "git+https://github.com/risc0/risc0?rev=d83c7fef80d0ebb87bc86567447efee633a24c4e#d83c7fef80d0ebb87bc86567447efee633a24c4e"
 dependencies = [
  "anyhow",
  "bytemuck",
@@ -5659,7 +5659,7 @@ dependencies = [
 [[package]]
 name = "risc0-zkvm-platform"
 version = "0.14.0"
-source = "git+https://github.com/risc0/risc0#84528d31c0efad566e585aa04a83d6692b32bd16"
+source = "git+https://github.com/risc0/risc0?rev=d83c7fef80d0ebb87bc86567447efee633a24c4e#d83c7fef80d0ebb87bc86567447efee633a24c4e"
 
 [[package]]
 name = "rocksdb"
