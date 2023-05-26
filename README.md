@@ -36,7 +36,11 @@ Our project comprises the following components:
 
   Finally, the host receives the `receipt` and `journal` from the Risc0 zkvm, constructs a transaction with them, and sends it to a locally running Substrate node, via `Subxt`.
 
+  You can find this code in `./provers/transfer`. The code which runs inside of the Risc0 zkvm/guest can be found in `./provers/transfer/methods/guest/src/bin/transfer.rs`
+
 - Substrate Node with Verification Pallet: This is a substrate template node with a custom verification pallet. The verification pallet is responsible for validating the STARK proof sent by the offchain prover, ensuring the integrity and correctness of the computed transfers, and then updating the chain's state in totality with the results included with the proof.
+
+The typical Substrate structure of `./node`, `./runtime`, and `./pallets` exists in this project. The custom pallet can be found in `./pallets/template`
 
 ![image](https://github.com/justinFrevert/substrate-web3athon-2023/assets/81839854/c84f8819-57a8-46a8-8232-bcab2da2480e)
 
@@ -90,6 +94,7 @@ cargo build --release
 ```
 3. Run prover
 ```shell
-../../target/release/rollup-host
+../../target/release/prover-host
 ```
 
+Ensure you keep the image id and subxt metadata up-to-date to avoid errors. See `provers/transfer/README.md`

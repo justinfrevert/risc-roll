@@ -61,7 +61,7 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> where BalanceOf<T>: From<u128>{
 		#[pallet::weight(1000000)]
 		#[pallet::call_index(0)]
-		pub fn rollup_transfers(
+		pub fn submit_transfer_proofs(
 			origin: OriginFor<T>,
 			// All accounts that were changed, in order
 			accounts: Vec<T::AccountId>,
