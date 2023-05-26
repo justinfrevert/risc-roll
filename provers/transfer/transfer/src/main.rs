@@ -12,27 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+mod input;
+use input::{process_json_file, TransactionInput};
 use methods::{TRANSFER_ELF, TRANSFER_ID};
-
+use sp_core::Pair as Pairt;
 use risc0_zkvm::{
-    serde::{from_slice, to_vec},
+    serde::to_vec,
     Executor, ExecutorEnv, SegmentReceipt, SessionReceipt,
 };
 use subxt::{
 	config::WithExtrinsicParams,
 	ext::{
 		sp_core::{
-			sr25519::{verify_batch, Pair as SubxtPair, Public, Signature},
+			sr25519::{Pair as SubxtPair, Public, Signature},
 			Pair as SubxtPairT,
 		},
-		sp_runtime::AccountId32,
+		sp_runtime::{AccountId32, traits::Verify},
 	},
 	tx::{BaseExtrinsicParams, PairSigner, PlainTip},
 	OnlineClient, PolkadotConfig, SubstrateConfig,
 };
 use codec::{Encode, Decode};
-use sp_keyring::AccountKeyring;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 // // Runtime types, etc
 #[subxt::subxt(runtime_metadata_path = "./metadata.scale")]
@@ -46,7 +47,8 @@ type ApiType = OnlineClient<
 	WithExtrinsicParams<SubstrateConfig, BaseExtrinsicParams<SubstrateConfig, PlainTip>>,
 >;
 
-type ApiType = OnlineClient<WithExtrinsicParams<SubstrateConfig, BaseExtrinsicParams<SubstrateConfig, PlainTip>>>;
+// TODO: should be the signed bytes of the call being made
+const MESSAGE: &str = "hello";
 
 async fn account_query(api: &ApiType, account: AccountId32)  -> Result<Option<AccountInfo<u32, AccountData<u128>>>, subxt::Error> {
     let query = substrate_node::storage().system().account(&account);
@@ -58,31 +60,33 @@ async fn account_query(api: &ApiType, account: AccountId32)  -> Result<Option<Ac
 async fn main() {
     let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
 
-    println!("Preparing transfers...");
+    println!("Preparing transactions...");
+    let transfers = process_json_file();
 
-    // TODO: get from input instead later
-    let transfers = get_from_json();
+    if transfers.is_empty() {
+        panic!("Transactions must not be empty!");
+    }
 
-	transfers.iter().map(|_| {
-		let sender_pair =
-		SubxtPair::from_seed(&array_bytes::hex2array_unchecked(&args.sender_hex_seed));
-		let sender_public_key = sender_pair.public();
-		let receiver_public_key = Public::from_raw(array_bytes::hex2array_unchecked(&args.receiver));
-		let transfer_amount = args.amount;
-		let message: [u8; 12] = array_bytes::hex2array_unchecked(&"68656c6c6f2c20776f726c64");
-	
-		let signature = Signature::from_raw(array_bytes::hex2array_unchecked(&args.sig));
-		if !verify_batch(vec![&message], vec![&signature], vec![&sender_public_key.into()]) {
-			panic!("Signature verification failed");
+	let signatures_valid = transfers.iter().all(| TransactionInput {sender, recipient, amount, signature}| {
+		let is_valid = Signature::verify(&signature, MESSAGE.as_bytes(), &sender);
+
+		if !is_valid {
+			println!("Could not verify signature for sender: {:?} recipient: {:?}, balance: {:?} ",
+			sender,
+			recipient,
+			amount)
 		}
-	}).collect();
+		is_valid
+	});
 
+    if !signatures_valid {
+        panic!("Invalid signatures; could not process transactions");
+    }
 
-    // TODO: Maybe later we can send single integers representing accounts into the vm as an index
     let mut accounts_set = std::collections::HashSet::new();
 
     // Check all transfers and get list of accounts we need to check balances for(any account involved here)
-    transfers.iter().for_each(|(sender, recipient, _)| {
+    transfers.iter().for_each(| TransactionInput { sender, recipient, .. }| {
         accounts_set.insert(sender);
         accounts_set.insert(recipient);
     });
@@ -102,12 +106,11 @@ async fn main() {
 
     let accounts_set: Vec<Public> = accounts_set.into_iter().map(|p| *p).collect();
 
-    // Avoid sending the full accountsi nto the vm, we'll just send an index of each account in `accounts_set`, which is the same order as `balances`.
-    // So, the vm can use the indices to lookup account(balance) info from `balances`
-    let transfers_with_indexed_accounts = transfers.into_iter().map(|(sender, recipient, balance)| {
+    // Avoid sending the full accounts into the vm, we'll just look them up based on the order of balances
+    let transfers_with_indexed_accounts = transfers.into_iter().map(| TransactionInput { sender, recipient, amount, .. }| {
         let sender_index: usize = accounts_set.clone().into_iter().position(|r| r == sender).unwrap();
         let recipient_index: usize = accounts_set.clone().into_iter().position(|r| r == recipient).unwrap();
-        (sender_index, recipient_index, balance)
+        (sender_index, recipient_index, amount.into())
     }).collect();
 
     let receipt = transfer_batch(
@@ -120,7 +123,6 @@ async fn main() {
         "Code you have proven should successfully verify; did you specify the correct image ID?",
     );
 
-    // TODO: Below needs update to use changes to receipts in 0.14.0
     let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
     let restored_key = SubxtPair::from_string("0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a", None).unwrap();
     let signer = PairSigner::new(restored_key);

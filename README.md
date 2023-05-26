@@ -1,7 +1,9 @@
 # Risc-roll
 ### "Trustlessly offload computations of Substrate chains with zk proofs, without the zk learning curve"
 
-This repository serves as a Proof of Concept (POC) for *partial* zkrollups of Substrate chains. Our goal is to explore the possibilities of enabling Substrate/rust developers to build zk rollups in *plain rust*, eliminating the need for writing circuits. By leveraging the power of Risc0 and Rollup architecture, we aim to create an efficient and scalable solution for Substrate extrinsics.
+This repository serves as a Proof of Concept (POC) for *partial* zkrollups of Substrate chains. Our goal is to explore the possibilities of enabling Substrate/rust developers to leverage zk proofs *without the difficulty of circuit design*, and at any level throughout the Substrate stack.
+
+We try to exemplify this through a zkrollup of an extrinsic: balance transfers. Substrate developers are in a unique position to selectively roll up parts of their chain and enshrine the rollup results simply and in pasteable code similar to the pallet that we show. In the future, it may be possible to rollup any substrate pallet through some process that generates the appropriate guest code for it. In lieau of such a process, we show that this is a simple process to perform manually.
 
 *This project was developed over the course of one month at the 2023 Consensus Web3athon*
 
@@ -39,10 +41,12 @@ Our project comprises the following components:
 ![image](https://github.com/justinFrevert/substrate-web3athon-2023/assets/81839854/c84f8819-57a8-46a8-8232-bcab2da2480e)
 
 ## Performance
+Informal early benchmarks
 TBD: requires testing on stronger machine
 
 Macbook i7 16GB RAM
 - 3 transfer extrinsics: 12 secs
+- 30 transfer extrinsics: 21 secs
 - 50 transfer extrinsics: 28 secs
 
 ## Future Improvements
