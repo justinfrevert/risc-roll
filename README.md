@@ -45,26 +45,11 @@ The typical Substrate structure of `./node`, `./runtime`, and `./pallets` exists
 ![image](https://github.com/justinFrevert/substrate-web3athon-2023/assets/81839854/c84f8819-57a8-46a8-8232-bcab2da2480e)
 
 ## Performance
-Informal early benchmarks
-TBD: requires testing on stronger machine
-
+Some initial testing(not actual benchmarks)
 Macbook i7 16GB RAM
 - 3 transfer extrinsics: 12 secs
 - 30 transfer extrinsics: 21 secs
 - 50 transfer extrinsics: 28 secs
-
-## Future Improvements
-This project is first and foremost a POC and learning exercise. However, we believe that a more accessible verifiable computing environment will open the door to many new types of projects. We're interested in ways to more deeply ingrain the technology into Substrate tools. The following are ideas we'd like to explore in the future.
-
-- Rollup any pallet
-  - Generate Risc0 guest code to rollup (most)any pallet. This would allow substrate developers to freely and selectively offload portions of their chain.
-- Faster proving times
-  - Through optimizations and natural progression of Risc0's technology the speed of proving transactions will improve.
-- Recursive proofs for batch transactions
-- Sequencer and RPC endpoint for prover
-- Improve verifier
-  - Enshrine the rollup fully by trusting the incoming proof in the onchain transaction verification process
-  - Improve onchain state update by updating state through a lower-level API.
 
 ## Development
 Local development is based around the main workflow of sending proofs to the locally running Substrate node.
