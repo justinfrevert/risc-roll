@@ -82,4 +82,6 @@ cargo build --release
 ../../target/release/prover-host
 ```
 
-Ensure you keep the image id and subxt metadata up-to-date to avoid errors. See `provers/transfer/README.md`
+The prover will prove the transactions in `./provers/transfer/transactions.json`, send the proofs to the chain, which will verify and change the balances state, if the proof is verified.
+
+When making changes: ensure you keep the image id and subxt metadata up-to-date to avoid errors. See `provers/transfer/README.md`
