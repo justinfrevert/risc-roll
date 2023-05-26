@@ -37,7 +37,8 @@ pub fn main() {
         let sender_balance = balances[sender_index];
         let recipient_balance = balances[recipient_index];
 
-        balances[sender_index] = sender_balance.checked_sub(transfer_balance).unwrap();
+        // TODO: This shouldn't fail on bad transactions, we should take the bad transactions out
+        balances[sender_index] = sender_balance.checked_sub(transfer_balance).expect("Insufficient balance for transfer");
         balances[recipient_index] =  recipient_balance.checked_add(transfer_balance).unwrap();
     });
 

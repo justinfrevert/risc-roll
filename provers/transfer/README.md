@@ -25,4 +25,7 @@ By default, the existing transations in `transations.json` are passed into the n
 ```shell
 # Generate a transfer from alice to bob for 500 balance
 ./target/release/prover-host sign -s //Alice -t 5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty -a 500000000000000
+# Generate a transfer from bob to charlie for 1000000 balance
+./target/release/prover-host sign -s //Bob -t 5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y -a 1000000000000000000
 ```
+The results are not strongly verified, so a transaction can be pasted multiple times for testing convenience

@@ -34,9 +34,6 @@ type ApiType = OnlineClient<
 	WithExtrinsicParams<SubstrateConfig, BaseExtrinsicParams<SubstrateConfig, PlainTip>>,
 >;
 
-// TODO: should be the signed bytes of the call being made
-// const MESSAGE: &str = "hello";
-
 async fn account_query(api: &ApiType, account: AccountId32)  -> Result<Option<AccountInfo<u32, AccountData<u128>>>, subxt::Error> {
     let query = substrate_node::storage().system().account(&account);
     let query_result = api.storage().fetch(&query, None).await;    
@@ -54,6 +51,10 @@ pub async fn prove_transactions() {
     }
 
 	let signatures_valid = transfers.clone().into_iter().all(| TransactionInput { sender, recipient, amount, signature }| {
+        if sender == recipient {
+            panic!("Sender cannot be recipient. Got sender: {:?}, recipient: {:?}", sender, recipient);
+        }
+        // Verify the encoded bytes of the transaction the signer wants to make
         let message = UnsignedTransactionInput { sender, recipient, amount };
 		let is_valid = Signature::verify(&signature, message.encode().as_ref(), &sender);
 
