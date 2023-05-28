@@ -1,5 +1,4 @@
 # Risc-roll
-### "Trustlessly offload computations of Substrate chains with zk proofs, without the zk learning curve"
 
 This repository serves as a Proof of Concept (POC) for a prover which can serve as a zkrollup of a Substrate-based chain.  Our goal is to explore the possibilities of enabling Substrate/rust developers to leverage zk proofs generally, and not necessarily within the context of rollups, *without the difficulty of circuit design*, and at any level throughout the Substrate stack.
 
