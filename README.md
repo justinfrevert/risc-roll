@@ -48,7 +48,7 @@ The typical Substrate structure of `./node`, `./runtime`, and `./pallets` exists
 
 ## Performance
 Some initial testing(not actual benchmarks)
-Macbook i7 16GB RAM
+Macbook i7 16GB RAM(without `metal` feature)
 - 3 transfer extrinsics: 12 secs
 - 30 transfer extrinsics: 21 secs
 - 50 transfer extrinsics: 28 secs
