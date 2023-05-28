@@ -44,7 +44,7 @@ Our project comprises the following components:
 
 The typical Substrate structure of `./node`, `./runtime`, and `./pallets` exists in this project. The custom pallet can be found in `./pallets/template`
 
-![image](https://github.com/justinFrevert/substrate-web3athon-2023/assets/81839854/c84f8819-57a8-46a8-8232-bcab2da2480e)
+![architecture](https://github.com/justinFrevert/risc-roll/assets/81839854/e799dcd9-2a38-4063-b605-f5f294e1d7f5)
 
 ## Performance
 Some initial testing(not actual benchmarks)
