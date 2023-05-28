@@ -14,13 +14,16 @@ pub struct Cli {
 pub enum SubCommand {
     /// Run code to sign and output desired transactions only. This is basically for local testing, and not a proper way to sequence transactions for passing in.
     Sign {
-        #[clap(short, help = "Secret key of sender, which wil also be used to generate account id for \"from\" field")]
+        #[clap(short, help = "Secret key of sender, which wil also be used to generate account id for \"from\" field", required = true)]
         suri: String,
-        #[clap(short, help = "Hex string of public key of receiver")]
+        #[clap(short, help = "Hex string of public key of receiver", required = true)]
         to: Public,
-        #[clap(short, help = "Transfer amount")]
+        #[clap(short, help = "Amount to transfer from sender to receiver", required = true)]
         amount: u128,
     },
     /// Run the prover
-    Run,
+    Run {
+        #[clap(short, help = "Override local file path for file containin transactions", default_value = "./transactions.json")]
+        transactions_file_path: String,
+    },
 }

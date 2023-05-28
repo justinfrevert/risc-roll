@@ -18,14 +18,10 @@ mod common;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::pallet_prelude::*;
+	use crate::common::TRANSFER_IMAGE_ID;
+	use frame_support::{pallet_prelude::*, traits::Currency};
 	use frame_system::pallet_prelude::*;
-	use frame_support::traits::Currency;
-	use risc0_zkvm::{
-		SessionReceipt, SegmentReceipt, sha::Digest,
-		serde::from_slice
-	};
-	use crate::common::{TRANSFER_IMAGE_ID};
+	use risc0_zkvm::{serde::from_slice, sha::Digest, SegmentReceipt, SessionReceipt};
 	use sp_std::vec::Vec;
 
 	#[pallet::pallet]
@@ -33,7 +29,7 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	pub type BalanceOf<T> =
-	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+		<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -48,7 +44,7 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// The seal was verified
-		VerificationSuccess
+		VerificationSuccess,
 	}
 
 	#[pallet::error]
@@ -58,7 +54,10 @@ pub mod pallet {
 	}
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> where BalanceOf<T>: From<u128>{
+	impl<T: Config> Pallet<T>
+	where
+		BalanceOf<T>: From<u128>,
+	{
 		#[pallet::weight(1000000)]
 		#[pallet::call_index(0)]
 		pub fn submit_transfer_proofs(
@@ -67,21 +66,22 @@ pub mod pallet {
 			accounts: Vec<T::AccountId>,
 			substrate_segment_receipts: Vec<(Vec<u32>, u32)>,
 			// journal of (Vec<old balances>, Vec<new_balances>), both in order
-			journal: Vec<u8>
+			journal: Vec<u8>,
 		) -> DispatchResult {
-			// TODO: Look into whether there is a configuration where we don't need this extra signature check due to the other verifications
-			// i.e. add the receipt verification in the pallet validate unsigned portion
+			// TODO: Look into whether there is a configuration where we don't need this extra
+			// signature check due to the other verifications i.e. add the receipt verification in
+			// the pallet validate unsigned portion
 			ensure_signed(origin)?;
-			let segments: Vec<SegmentReceipt> = substrate_segment_receipts.into_iter().map(|(seal, index)| {
-				SegmentReceipt { seal, index }
-			})
-			.collect();
+			let segments: Vec<SegmentReceipt> = substrate_segment_receipts
+				.into_iter()
+				.map(|(seal, index)| SegmentReceipt { seal, index })
+				.collect();
 
-			let receipt = SessionReceipt {
-				segments, journal
-			};
+			let receipt = SessionReceipt { segments, journal };
 
-			receipt.verify(Digest::new(TRANSFER_IMAGE_ID)).map_err(|_| Error::<T>::FailedVerification)?;
+			receipt
+				.verify(Digest::new(TRANSFER_IMAGE_ID))
+				.map_err(|_| Error::<T>::FailedVerification)?;
 
 			// sender original, sender final, recipient original, recipient final
 			let (_, balances): (Vec<[u8; 16]>, Vec<[u8; 16]>) = from_slice(&receipt.journal).expect(
@@ -90,7 +90,7 @@ pub mod pallet {
 
 			accounts.into_iter().zip(balances.into_iter()).for_each(|(account, balance)| {
 				let balance = u128::from_be_bytes(balance);
-				// TODO: Check if there is a broader way to set new state 
+				// TODO: Check if there is a broader way to set new state
 				T::Currency::make_free_balance_be(&account, balance.into());
 			});
 

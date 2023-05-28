@@ -43,8 +43,8 @@ pub fn display_signature(signer: String, recipient: Public, amount: u128) {
     println!("{}\n(Hint: Paste this in transactions.json)", json_output);
 }
 
-pub fn process_json_file() -> Vec<TransactionInput> {
-    let file_contents = std::fs::read_to_string(EXPECTED_FILE_PATH).expect("Failed to read file");
+pub fn process_json_file(file_path: String) -> Vec<TransactionInput> {
+    let file_contents = std::fs::read_to_string(file_path).expect("Failed to read file");
     let data: Vec<TransactionInput> = serde_json::from_str(&file_contents).expect("Failed to parse JSON");
     data
 }

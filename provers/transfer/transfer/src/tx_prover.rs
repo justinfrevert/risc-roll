@@ -40,11 +40,11 @@ async fn account_query(api: &ApiType, account: AccountId32)  -> Result<Option<Ac
 	query_result
 }
 
-pub async fn prove_transactions() {
+pub async fn prove_transactions(file_path: String) {
     let api = OnlineClient::<PolkadotConfig>::new().await.unwrap();
 
     println!("Preparing transactions...");
-    let transfers = process_json_file();
+    let transfers = process_json_file(file_path);
 
     if transfers.is_empty() {
         panic!("Transactions must not be empty!");
@@ -115,7 +115,7 @@ pub async fn prove_transactions() {
     let restored_key = SubxtPair::from_string("0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a", None).unwrap();
     let signer = PairSigner::new(restored_key);
 
-    println!("transfer id {:?} (if you updated guest, this needs to be pasted into pallet image id)", TRANSFER_ID);
+    println!("transfer image id {:?} (if you updated guest, this needs to be pasted into pallet image id)", TRANSFER_ID);
 
     // The segment receipts that SCALE can understand
     let substrate_session_receipt = receipt.segments.into_iter().map(| SegmentReceipt { seal, index }| {
@@ -166,7 +166,7 @@ fn transfer_batch(balances: Vec<u128>, transfers_with_indexed_accounts: Vec<(usi
     // Prove the session to produce a receipt.
     let receipt = session.prove().unwrap();
     let elapsed = guest_start_time.elapsed();
-    println!("Guest done proving txes in {:?} sec {:?} ms", elapsed.as_secs(), elapsed.subsec_millis());
+    println!("Guest done proving {:?} txes in {:?} sec {:?} ms", compatible_transfers_with_indexed_accounts.len(), elapsed.as_secs(), elapsed.subsec_millis());
 
     receipt
 }

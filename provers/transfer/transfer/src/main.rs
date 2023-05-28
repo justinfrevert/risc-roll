@@ -16,7 +16,7 @@ mod input;
 mod cli;
 mod tx_prover;
 
-use cli::{Cli, SubCommand};
+use cli::{Cli, SubCommand::{Sign, Run}};
 use clap::Parser;
 
 #[tokio::main]
@@ -24,13 +24,17 @@ async fn main() {
     let args = Cli::parse();
 
     match args.command {
-        Some(SubCommand::Sign { suri, to, amount }) => {
+        Some(Sign { suri, to, amount  }) => {
             // Signer mode for convenient transaction signing
             input::display_signature(suri, to, amount)
         },
-        _ => {
+        Some(Run { transactions_file_path, .. }) => {
             // Run the code
-            tx_prover::prove_transactions().await;
+            tx_prover::prove_transactions(transactions_file_path).await;
+        },
+        // TODO: I feel like I am not using clap default arguments properly here... I would think there would be a way to avoid to have to do it manually this
+        None => {
+            tx_prover::prove_transactions("./transactions.json".to_string()).await
         }
     }
 }
