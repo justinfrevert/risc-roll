@@ -5,7 +5,7 @@ This repository serves as a Proof of Concept (POC) for a prover which can serve 
 
 We try to exemplify this through a zk-prover of an extrinsic: balance transfers, for use in a zkrollup. Substrate developers are in a unique position to selectively roll up parts of their chain and enshrine the rollup results simply and in pasteable code similar to the pallet that we show due to Substrate's modularity. In the future, it may be possible to rollup any substrate pallet through some process that generates the appropriate guest code for it. In lieau of such a process, we show that this is a simple process to perform manually.
 
-In other words, this is like a simplified version of the [R1CS payment tutorial]([url](https://github.com/arkworks-rs/r1cs-tutorial/tree/main/simple-payments)), which instead uses Risc0 and is also enshrined on-chain.
+In other words, this is like a simplified version of the [R1CS payment tutorial](https://github.com/arkworks-rs/r1cs-tutorial/tree/main/simple-payments), which instead uses Risc0 and is also enshrined on-chain.
 
 *This project was developed over the course of one month at the 2023 Consensus Web3athon*
 
