@@ -50,6 +50,9 @@ pub async fn prove_transactions(file_path: String) {
         panic!("Transactions must not be empty!");
     }
 
+    // TODO: We're just verifying signatures in the host, and this implies a big trust assumption on the host.
+    // A production application would have a more clever scheme which includes some way for the guest to verify the signatures,
+    // or verify that the host verified the signatures correctly
 	let signatures_valid = transfers.clone().into_iter().all(| TransactionInput { sender, recipient, amount, signature }| {
         if sender == recipient {
             panic!("Sender cannot be recipient. Got sender: {:?}, recipient: {:?}", sender, recipient);
