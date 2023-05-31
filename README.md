@@ -28,7 +28,7 @@ Our project has the following objectives:
 - Performance Evaluation: We will evaluate the performance of Risc0 proving for various computations and assess whether it meets the requirements for processing Substrate extrinsics efficiently.
 
 ## Scope
-To maintain focus and deliver a meaningful POC, our project has the following scope:
+To maintain focus and deliver a meaningful POC, our project(for the initial hackathon) has the following scope:
 
 - No Custom VM or Substrate Executor
   - Some zk rollups implement the VM of their chain for a number of reasons. We have a few reasons for not doing this, one of them being hacakthon scope. There is value instead in a different approach of emulating pallet code in the guest, which is the approach we've taken here.
@@ -37,6 +37,7 @@ To maintain focus and deliver a meaningful POC, our project has the following sc
 - The project does not use recursive proofs, as this is not currently supported in Risc0. Support for this will come soon, and we plan to implement it when ready.
 - Only one extrinsic(transaction) type is supported: balance transfers. Later, we could develop functionality to generate guest code out of Substrate pallets.
 - There is no prover or sequencer network as of the time of writing.
+- There is no checking against the on-chain trie performed.
 
 ## Project Overview
 Our project comprises the following components:
