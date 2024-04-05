@@ -1,5 +1,10 @@
 # Risc-roll
 
+## Update
+This project is often referenced in conversations on examples of RISC Zero usage with Substrate. If you are looking for such examples, please see:
+- [substrate-risc0](https://github.com/justinfrevert/substrate-risc0)
+- [TOEP](https://github.com/justinfrevert/Project-TOEP)
+
 This repository serves as a Proof of Concept (POC) for a prover which can serve as a zkrollup of a Substrate-based chain.  Our goal is to explore the possibilities of enabling Substrate/rust developers to leverage zk proofs generally, and not necessarily within the context of rollups, *without the difficulty of circuit design*, and at any level throughout the Substrate stack.
 
 We try to exemplify this through a zk-prover of an extrinsic: balance transfers, for use in a zkrollup. Substrate developers are in a unique position to selectively roll up parts of their chain and enshrine the rollup results simply and in pasteable code similar to the pallet that we show due to Substrate's modularity. In the future, it may be possible to rollup any substrate pallet through some process that generates the appropriate guest code for it. In lieau of such a process, we show that this is a simple process to perform manually.
